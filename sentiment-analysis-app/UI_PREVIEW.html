@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .app {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .emoji {
+            font-size: 3rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .textarea {
+            width: 100%;
+            padding: 15px;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .result-card {
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 16px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .sentiment-display {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .sentiment-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 700;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .positive {
+            background-color: #4caf50;
+        }
+
+        .negative {
+            background-color: #f44336;
+        }
+
+        .sentiment-emoji {
+            font-size: 2rem;
+        }
+
+        .sentiment-label {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .confidence-section {
+            margin-bottom: 25px;
+        }
+
+        .confidence-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .confidence-value {
+            font-size: 1.3rem;
+            color: #667eea;
+        }
+
+        .progress-bar {
+            height: 30px;
+            background-color: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.8s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: 600;
+            border-radius: 15px;
+            background-color: #4caf50;
+        }
+
+        .review-display {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .review-label {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .review-text {
+            font-size: 1rem;
+            color: #333;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .demo-note {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .app {
+                padding: 15px;
+            }
+
+            .title {
+                font-size: 1.8rem;
+            }
+
+            .emoji {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="container">
+            <div class="demo-note">
+                🎨 UI Preview - This is how your app will look!
+            </div>
+
+            <header class="header">
+                <h1 class="title">
+                    <span class="emoji">💬</span>
+                    Product Review Sentiment Analyzer
+                </h1>
+                <p class="subtitle">
+                    Analyze the sentiment of product reviews using AI
+                </p>
+            </header>
+
+            <div class="card">
+                <form class="form">
+                    <div class="input-group">
+                        <label for="review" class="label">
+                            Enter Product Review
+                        </label>
+                        <textarea
+                            id="review"
+                            class="textarea"
+                            placeholder="Type or paste a product review here... (e.g., 'This product is amazing! It works perfectly and exceeded my expectations.')"
+                            rows="6"
+                        >This product is absolutely amazing! It exceeded all my expectations and works perfectly. I would highly recommend it to anyone. Great quality and fast shipping!</textarea>
+                        <div class="char-count">
+                            143 / 2000 characters
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-primary">
+                            <span>🔍</span>
+                            Analyze Sentiment
+                        </button>
+                        <button type="button" class="btn btn-secondary">
+                            Clear
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Example Result -->
+                <div class="result-card">
+                    <h2 class="result-title">Analysis Result</h2>
+                    
+                    <div class="sentiment-display">
+                        <div class="sentiment-badge positive">
+                            <span class="sentiment-emoji">😊</span>
+                            <span class="sentiment-label">POSITIVE</span>
+                        </div>
+                    </div>
+
+                    <div class="confidence-section">
+                        <div class="confidence-label">
+                            <span>Confidence Score</span>
+                            <span class="confidence-value">99.87%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 99.87%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="review-display">
+                        <h3 class="review-label">Analyzed Review:</h3>
+                        <p class="review-text">This product is absolutely amazing! It exceeded all my expectations and works perfectly. I would highly recommend it to anyone. Great quality and fast shipping!</p>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer">
+                <p>Powered by AI & Machine Learning 🤖</p>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>
